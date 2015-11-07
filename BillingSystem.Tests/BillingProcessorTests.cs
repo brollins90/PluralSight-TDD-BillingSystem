@@ -74,6 +74,23 @@ public class BillingProcessorTests
 
             Assert.True(customer.Subscription.IsCurrent);
         }
+
+        [Fact]
+        public void CustomerWhoIsCurrentAndDueToPayAndFailsMaximumTimesIsNoLongerSubscribed()
+        {
+            var subscription = new MonthlySubscription();
+            var customer = new Customer { Subscription = subscription };
+            var processor = TestableBillingProcessor.Create(customer);
+            processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
+                             .Returns(false);
+
+            for (int i = 0; i < BillingProcessor.MAX_FAILURES; i++)
+            {
+                processor.ProcessMonth(2011, 8);
+            }
+
+            Assert.False(customer.Subscription.IsCurrent);
+        }
     }
 
     public class Annual
@@ -82,22 +99,6 @@ public class BillingProcessorTests
     }
 
 
-
-    [Fact]
-    public void CustomerWhoIsCurrentAndDueToPayAndFailsMaximumTimesIsNoLongerSubscribed()
-    {
-        var customer = new Customer { Subscribed = true };
-        var processor = TestableBillingProcessor.Create(customer);
-        processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
-                         .Returns(false);
-
-        for (int i = 0; i < BillingProcessor.MAX_FAILURES; i++)
-        {
-            processor.ProcessMonth(2011, 8);
-        }
-
-        Assert.False(customer.Subscribed);
-    }
 
     //[Fact]
     //public void SuccessfulChargeOfSubscribed
