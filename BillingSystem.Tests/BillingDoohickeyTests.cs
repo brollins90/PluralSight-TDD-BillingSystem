@@ -43,6 +43,17 @@
             processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
 
+        [Fact]
+        public void CustomerWithSubscriptionThatIsCurrentThroughNextYearDoesNotGetCharged()
+        {
+            var customer = new Customer { Subscribed = true, PaidThroughYear = 2012, PaidThroughMonth = 1 };
+            var processor = TestableBillingProcessor.Create(customer);
+
+            processor.ProcessMonth(2011, 8);
+
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+        }
+
         // paid through next year
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
@@ -84,7 +95,9 @@
 
             var customer = _repo.Customers.Single();
 
-            if (customer.Subscribed && customer.PaidThroughMonth < month)
+            if (customer.Subscribed && 
+                customer.PaidThroughYear <= year &&
+                customer.PaidThroughMonth < month)
             {
                 _charger.ChargeCustomer(customer);
             }
