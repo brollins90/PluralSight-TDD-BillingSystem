@@ -84,7 +84,7 @@ public class BillingProcessorTests
             processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
                              .Returns(false);
 
-            for (int i = 0; i < BillingProcessor.MAX_FAILURES; i++)
+            for (int i = 0; i < MonthlySubscription.MAX_FAILURES; i++)
             {
                 processor.ProcessMonth(2011, 8);
             }
@@ -154,14 +154,13 @@ public class AnnualSubscription : Subscription
 
 public class MonthlySubscription : Subscription
 {
+    public const int MAX_FAILURES = 3;
+
     private int failureCount;
 
     public override bool IsCurrent
     {
-        get
-        {
-            return true;
-        }
+        get { return failureCount < MAX_FAILURES; }
     }
 
     public override bool IsRecurring { get { return true; } }
@@ -191,8 +190,6 @@ public class Customer
 
 public class BillingProcessor
 {
-    public const int MAX_FAILURES = 3;
-
     private ICreditCardCharger _charger;
     private ICustomerRepository _repo;
 
