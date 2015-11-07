@@ -24,7 +24,17 @@ public class BillingProcessorTests
 
     public class Monthly
     {
+        [Fact]
+        public void CustomerWithSubscriptionThatIsExpiredGetsCharged()
+        {
+            var subscription = new MonthlySubscription();
+            var customer = new Customer { Subscription = subscription };
+            var processor = TestableBillingProcessor.Create(customer);
 
+            processor.ProcessMonth(2011, 8);
+
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Once);
+        }
     }
 
     public class Annual
@@ -32,16 +42,6 @@ public class BillingProcessorTests
 
     }
 
-    [Fact]
-    public void CustomerWithSubscriptionThatIsExpiredGetsCharged()
-    {
-        var customer = new Customer { Subscribed = true };
-        var processor = TestableBillingProcessor.Create(customer);
-
-        processor.ProcessMonth(2011, 8);
-
-        processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Once);
-    }
 
     [Fact]
     public void CustomerWithSubscriptionThatIsCurrentDoesNotGetCharged()
@@ -133,10 +133,7 @@ public class AnnualSubscription : Subscription
         }
     }
 
-    public override bool IsRecurring
-    {
-        get { return false; }
-    }
+    public override bool IsRecurring { get { return false; } }
 }
 
 public class MonthlySubscription : Subscription
@@ -149,10 +146,10 @@ public class MonthlySubscription : Subscription
         }
     }
 
-    public override bool IsRecurring
-    {
-        get { return true; }
-    }
+    public override bool IsRecurring { get { return true; } }
+
+    public int PaidThroughMonth { get; set; }
+    public int PaidThroughYear { get; set; }
 }
 
 public class Customer
@@ -162,6 +159,7 @@ public class Customer
     public int PaidThroughYear { get; set; }
     public int PaymentFailures { get; set; }
     public bool Subscribed { get; set; }
+    public Subscription Subscription { get; set; }
 }
 
 public class BillingProcessor
@@ -182,9 +180,7 @@ public class BillingProcessor
 
         var customer = _repo.Customers.Single();
 
-        if (customer.Subscribed &&
-            customer.PaidThroughYear <= year &&
-            customer.PaidThroughMonth < month)
+        if (NeedsBilling(year, month, customer))
         {
             bool charged = _charger.ChargeCustomer(customer);
 
@@ -196,6 +192,13 @@ public class BillingProcessor
                 }
             }
         }
+    }
+
+    private static bool NeedsBilling(int year, int month, Customer customer)
+    {
+        return customer.Subscribed &&
+               customer.PaidThroughYear <= year &&
+               customer.PaidThroughMonth < month;
     }
 }
 
