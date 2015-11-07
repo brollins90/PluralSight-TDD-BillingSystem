@@ -47,7 +47,7 @@
         // not all customers are subscribers
         // idle customers should be automatically unsubscribed
 
-        private BillingProcessor CreateBillingProcessor(Customer customer)
+        private TestableBillingProcessor CreateBillingProcessor(Customer customer)
         {
             var repo = new Mock<ICustomerRepository>();
             var charger = new Mock<ICreditCardCharger>();
@@ -95,6 +95,27 @@
             {
                 _charger.ChargeCustomer(customer);
             }
+        }
+    }
+
+    public class TestableBillingProcessor : BillingProcessor
+    {
+        public Mock<ICreditCardCharger> Charger;
+        public Mock<ICustomerRepository> Repository;
+
+        private TestableBillingProcessor(Mock<ICustomerRepository> repository,
+                                        Mock<ICreditCardCharger> charger)
+            : base(repository.Object, charger.Object)
+        {
+            Charger = charger;
+            Repository = repository;
+        }
+
+        public static TestableBillingProcessor Create()
+        {
+            return new TestableBillingProcessor(
+                new Mock<ICustomerRepository>(),
+                new Mock<ICreditCardCharger>());
         }
     }
 }
