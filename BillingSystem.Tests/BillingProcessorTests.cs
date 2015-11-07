@@ -121,6 +121,8 @@ public abstract class Subscription
 {
     public abstract bool IsCurrent { get; }
     public abstract bool IsRecurring { get; }
+
+    public abstract bool NeedsBilling(int year, int month);
 }
 
 public class AnnualSubscription : Subscription
@@ -134,6 +136,11 @@ public class AnnualSubscription : Subscription
     }
 
     public override bool IsRecurring { get { return false; } }
+
+    public override bool NeedsBilling(int year, int month)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class MonthlySubscription : Subscription
@@ -150,6 +157,11 @@ public class MonthlySubscription : Subscription
 
     public int PaidThroughMonth { get; set; }
     public int PaidThroughYear { get; set; }
+
+    public override bool NeedsBilling(int year, int month)
+    {
+        throw new NotImplementedException();
+    }
 }
 
 public class Customer
@@ -196,6 +208,10 @@ public class BillingProcessor
 
     private static bool NeedsBilling(int year, int month, Customer customer)
     {
+        if (customer.Subscription != null)
+        {
+            return customer.Subscription.NeedsBilling(year, month);
+        }
         return customer.Subscribed &&
                customer.PaidThroughYear <= year &&
                customer.PaidThroughMonth < month;
