@@ -43,6 +43,7 @@
             processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
 
+        // paid through next year
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
         // not all customers are subscribers
@@ -83,7 +84,7 @@
 
             var customer = _repo.Customers.Single();
 
-            if (customer.Subscribed)
+            if (customer.Subscribed && customer.PaidThroughMonth < month)
             {
                 _charger.ChargeCustomer(customer);
             }
