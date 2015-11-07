@@ -155,12 +155,12 @@ public class MonthlySubscription : Subscription
 
     public override bool IsRecurring { get { return true; } }
 
-    public int PaidThroughMonth { get; set; }
-    public int PaidThroughYear { get; set; }
+    //public int PaidThroughMonth { get; set; }
+    //public int PaidThroughYear { get; set; }
 
     public override bool NeedsBilling(int year, int month)
     {
-        throw new NotImplementedException();
+        return true;
     }
 }
 
