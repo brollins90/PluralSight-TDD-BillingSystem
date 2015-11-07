@@ -15,7 +15,9 @@
         {
             var repo = new Mock<ICustomerRepository>();
             var charger = new Mock<ICreditCardCharger>();
-            var customer = new Customer(); // what does not having a subscription mean?
+            var customer = new Customer();
+            repo.Setup(r => r.Customers)
+                .Returns(new Customer[] { customer });
             BillingDoohickey thing = new BillingDoohickey(repo.Object, charger.Object);
 
             thing.ProcessMonth(2011, 8);
@@ -29,6 +31,8 @@
             var repo = new Mock<ICustomerRepository>();
             var charger = new Mock<ICreditCardCharger>();
             var customer = new Customer { Subscribed = true };
+            repo.Setup(r => r.Customers)
+                .Returns(new Customer[] { customer });
             BillingDoohickey thing = new BillingDoohickey(repo.Object, charger.Object);
 
             thing.ProcessMonth(2011, 8);
@@ -74,7 +78,11 @@
         {
 
             var customer = _repo.Customers.Single();
-            _charger.ChargeCustomer(customer);
+
+            if (customer.Subscribed)
+            {
+                _charger.ChargeCustomer(customer);
+            }
         }
     }
 }
