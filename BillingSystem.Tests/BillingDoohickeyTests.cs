@@ -71,7 +71,7 @@
         [Fact]
         public void CustomerWhoIsCurrentAndDueToPayAndFailsMaximumTimesIsNoLongerSubscribed()
         {
-            var customer = new Customer { Subscribed = true, PaidThroughYear = 2011, PaidThroughMonth = 1 };
+            var customer = new Customer { Subscribed = true };
             var processor = TestableBillingProcessor.Create(customer);
             processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
                              .Returns(false);
@@ -83,7 +83,12 @@
 
             Assert.False(customer.Subscribed);
         }
-        // Monthly Billing
+
+        //[Fact]
+        //public void SuccessfulChargeOfSubscribed
+
+        // What are kinds of subscriptions?
+
         // Grace period for missed payments ("dunning" status)
         // not all customers are subscribers
         // idle customers should be automatically unsubscribed
