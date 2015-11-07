@@ -8,15 +8,28 @@ using Xunit;
 
 public class BillingProcessorTests
 {
-    [Fact]
-    public void CustomerWhoDoesNotHaveASubscriptionDoesNotGetCharged()
+    public class NoSubscription
     {
-        var customer = new Customer();
-        var processor = TestableBillingProcessor.Create(customer);
+        [Fact]
+        public void CustomerWhoDoesNotHaveASubscriptionDoesNotGetCharged()
+        {
+            var customer = new Customer();
+            var processor = TestableBillingProcessor.Create(customer);
 
-        processor.ProcessMonth(2011, 8);
+            processor.ProcessMonth(2011, 8);
 
-        processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+        }
+    }
+
+    public class Monthly
+    {
+
+    }
+
+    public class Annual
+    {
+
     }
 
     [Fact]
