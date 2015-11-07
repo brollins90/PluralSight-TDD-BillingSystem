@@ -14,26 +14,22 @@
         public void CustomerWhoDoesNotHaveASubscriptionDoesNotGetCharged()
         {
             var customer = new Customer();
-            var processor = CreateBillingProcessor(customer);
+            var processor = TestableBillingProcessor.Create(customer);
 
             processor.ProcessMonth(2011, 8);
 
-            charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
 
         [Fact]
         public void CustomerWithSubscriptionThatIsExpiredGetsCharged()
         {
-            var repo = new Mock<ICustomerRepository>();
-            var charger = new Mock<ICreditCardCharger>();
             var customer = new Customer { Subscribed = true };
-            repo.Setup(r => r.Customers)
-                .Returns(new Customer[] { customer });
-            BillingProcessor thing = new BillingProcessor(repo.Object, charger.Object);
+            var processor = TestableBillingProcessor.Create(customer);
 
-            thing.ProcessMonth(2011, 8);
+            processor.ProcessMonth(2011, 8);
 
-            charger.Verify(c => c.ChargeCustomer(customer), Times.Once);
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Once);
         }
 
         [Fact]
@@ -46,18 +42,6 @@
         // Grace period for missed payments ("dunning" status)
         // not all customers are subscribers
         // idle customers should be automatically unsubscribed
-
-        private TestableBillingProcessor CreateBillingProcessor(Customer customer)
-        {
-            var repo = new Mock<ICustomerRepository>();
-            var charger = new Mock<ICreditCardCharger>();
-            repo.Setup(r => r.Customers)
-                .Returns(new Customer[] { customer });
-            BillingProcessor thing = new BillingProcessor(repo.Object, charger.Object);
-
-            return thing;
-        }
-
     }
 
     public interface ICustomerRepository
@@ -111,10 +95,14 @@
             Repository = repository;
         }
 
-        public static TestableBillingProcessor Create()
+        public static TestableBillingProcessor Create(params Customer[] customers)
         {
+            var repository = new Mock<ICustomerRepository>();
+            repository.Setup(r => r.Customers)
+                .Returns(customers);
+
             return new TestableBillingProcessor(
-                new Mock<ICustomerRepository>(),
+                repository,
                 new Mock<ICreditCardCharger>());
         }
     }
