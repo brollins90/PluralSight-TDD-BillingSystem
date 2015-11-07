@@ -95,7 +95,7 @@ public class BillingProcessorTests
 
     public class Annual
     {
-
+        // Because annual requires a manual renewal, we dont have to test it...
     }
 
 
@@ -208,14 +208,6 @@ public class BillingProcessor
         {
             bool charged = _charger.ChargeCustomer(customer);
             customer.Subscription.RecordChargedResult(charged);
-
-            //if (!charged)
-            //{
-            //    if (++customer.PaymentFailures >= MAX_FAILURES)
-            //    {
-            //        customer.Subscribed = false;
-            //    }
-            //}
         }
     }
 
