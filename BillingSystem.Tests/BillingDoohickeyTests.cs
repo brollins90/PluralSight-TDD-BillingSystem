@@ -13,14 +13,10 @@
         [Fact]
         public void CustomerWhoDoesNotHaveASubscriptionDoesNotGetCharged()
         {
-            var repo = new Mock<ICustomerRepository>();
-            var charger = new Mock<ICreditCardCharger>();
             var customer = new Customer();
-            repo.Setup(r => r.Customers)
-                .Returns(new Customer[] { customer });
-            BillingDoohickey thing = new BillingDoohickey(repo.Object, charger.Object);
+            var processor = CreateBillingProcessor(customer);
 
-            thing.ProcessMonth(2011, 8);
+            processor.ProcessMonth(2011, 8);
 
             charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
@@ -33,7 +29,7 @@
             var customer = new Customer { Subscribed = true };
             repo.Setup(r => r.Customers)
                 .Returns(new Customer[] { customer });
-            BillingDoohickey thing = new BillingDoohickey(repo.Object, charger.Object);
+            BillingProcessor thing = new BillingProcessor(repo.Object, charger.Object);
 
             thing.ProcessMonth(2011, 8);
 
@@ -51,6 +47,16 @@
         // not all customers are subscribers
         // idle customers should be automatically unsubscribed
 
+        private BillingProcessor CreateBillingProcessor(Customer customer)
+        {
+            var repo = new Mock<ICustomerRepository>();
+            var charger = new Mock<ICreditCardCharger>();
+            repo.Setup(r => r.Customers)
+                .Returns(new Customer[] { customer });
+            BillingProcessor thing = new BillingProcessor(repo.Object, charger.Object);
+
+            return thing;
+        }
 
     }
 
@@ -69,12 +75,12 @@
         public bool Subscribed { get; internal set; }
     }
 
-    public class BillingDoohickey
+    public class BillingProcessor
     {
         private ICreditCardCharger _charger;
         private ICustomerRepository _repo;
 
-        public BillingDoohickey(ICustomerRepository repo, ICreditCardCharger charger)
+        public BillingProcessor(ICustomerRepository repo, ICreditCardCharger charger)
         {
             _repo = repo;
             _charger = charger;
