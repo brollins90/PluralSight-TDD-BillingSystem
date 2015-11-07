@@ -35,6 +35,18 @@ public class BillingProcessorTests
 
             processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Once);
         }
+
+        [Fact]
+        public void CustomerWithSubscriptionThatIsCurrentDoesNotGetCharged()
+        {
+            var subscription = new MonthlySubscription { PaidThroughYear = 2011, PaidThroughMonth = 8 };
+            var customer = new Customer { Subscription = subscription };
+            var processor = TestableBillingProcessor.Create(customer);
+
+            processor.ProcessMonth(2011, 8);
+
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+        }
     }
 
     public class Annual
@@ -42,17 +54,6 @@ public class BillingProcessorTests
 
     }
 
-
-    [Fact]
-    public void CustomerWithSubscriptionThatIsCurrentDoesNotGetCharged()
-    {
-        var customer = new Customer { Subscribed = true, PaidThroughYear = 2011, PaidThroughMonth = 8 };
-        var processor = TestableBillingProcessor.Create(customer);
-
-        processor.ProcessMonth(2011, 8);
-
-        processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
-    }
 
     [Fact]
     public void CustomerWithSubscriptionThatIsCurrentThroughNextYearDoesNotGetCharged()
@@ -155,12 +156,13 @@ public class MonthlySubscription : Subscription
 
     public override bool IsRecurring { get { return true; } }
 
-    //public int PaidThroughMonth { get; set; }
-    //public int PaidThroughYear { get; set; }
+    public int PaidThroughMonth { get; set; }
+    public int PaidThroughYear { get; set; }
 
     public override bool NeedsBilling(int year, int month)
     {
-        return true;
+        return PaidThroughYear <= year &&
+               PaidThroughMonth < month;
     }
 }
 
