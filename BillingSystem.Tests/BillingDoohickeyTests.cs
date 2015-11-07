@@ -53,7 +53,7 @@
 
             processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
-        
+
         [Fact]
         public void CustomerWhoIsCurrentAndDueToPayAndFailsOnceIsStillSubscribed()
         {
@@ -61,11 +61,27 @@
             var processor = TestableBillingProcessor.Create(customer);
             processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
                              .Returns(false);
-                
+
 
             processor.ProcessMonth(2011, 8);
 
             Assert.True(customer.Subscribed);
+        }
+
+        [Fact]
+        public void CustomerWhoIsCurrentAndDueToPayAndFailsThreeTimesIsNoLongerSubscribed()
+        {
+            var customer = new Customer { Subscribed = true, PaidThroughYear = 2012, PaidThroughMonth = 1 };
+            var processor = TestableBillingProcessor.Create(customer);
+            processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
+                             .Returns(false);
+
+
+            processor.ProcessMonth(2011, 8);
+            processor.ProcessMonth(2011, 8);
+            processor.ProcessMonth(2011, 8);
+
+            Assert.False(customer.Subscribed);
         }
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
@@ -107,7 +123,7 @@
 
             var customer = _repo.Customers.Single();
 
-            if (customer.Subscribed && 
+            if (customer.Subscribed &&
                 customer.PaidThroughYear <= year &&
                 customer.PaidThroughMonth < month)
             {
