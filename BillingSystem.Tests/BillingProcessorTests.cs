@@ -47,6 +47,33 @@ public class BillingProcessorTests
 
             processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
+
+        [Fact]
+        public void CustomerWithSubscriptionThatIsCurrentThroughNextYearDoesNotGetCharged()
+        {
+            var subscription = new MonthlySubscription { PaidThroughYear = 2012, PaidThroughMonth = 8 };
+            var customer = new Customer { Subscription = subscription };
+            var processor = TestableBillingProcessor.Create(customer);
+
+            processor.ProcessMonth(2011, 8);
+
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+        }
+
+        [Fact]
+        public void CustomerWhoIsCurrentAndDueToPayAndFailsOnceIsStillCurrent()
+        {
+            var subscription = new MonthlySubscription();
+            var customer = new Customer { Subscription = subscription };
+            var processor = TestableBillingProcessor.Create(customer);
+            processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
+                             .Returns(false);
+
+
+            processor.ProcessMonth(2011, 8);
+
+            Assert.True(customer.Subscription.IsCurrent);
+        }
     }
 
     public class Annual
@@ -55,30 +82,6 @@ public class BillingProcessorTests
     }
 
 
-    [Fact]
-    public void CustomerWithSubscriptionThatIsCurrentThroughNextYearDoesNotGetCharged()
-    {
-        var customer = new Customer { Subscribed = true, PaidThroughYear = 2012, PaidThroughMonth = 1 };
-        var processor = TestableBillingProcessor.Create(customer);
-
-        processor.ProcessMonth(2011, 8);
-
-        processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
-    }
-
-    [Fact]
-    public void CustomerWhoIsCurrentAndDueToPayAndFailsOnceIsStillSubscribed()
-    {
-        var customer = new Customer { Subscribed = true, PaidThroughYear = 2012, PaidThroughMonth = 1 };
-        var processor = TestableBillingProcessor.Create(customer);
-        processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
-                         .Returns(false);
-
-
-        processor.ProcessMonth(2011, 8);
-
-        Assert.True(customer.Subscribed);
-    }
 
     [Fact]
     public void CustomerWhoIsCurrentAndDueToPayAndFailsMaximumTimesIsNoLongerSubscribed()
@@ -150,7 +153,7 @@ public class MonthlySubscription : Subscription
     {
         get
         {
-            throw new NotImplementedException();
+            return true;
         }
     }
 
