@@ -20,6 +20,12 @@
             charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
 
+        [Fact]
+        public void CustomerWithSubscriptionThatIsExpiredGetsCharged()
+        {
+
+        }
+
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
         // not all customers are subscribers
@@ -54,9 +60,8 @@
             _charger = charger;
         }
 
-        internal void ProcessMonth(int year, int month)
+        public void ProcessMonth(int year, int month)
         {
-            throw new NotImplementedException();
         }
     }
 }
