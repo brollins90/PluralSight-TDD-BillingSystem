@@ -53,8 +53,20 @@
 
             processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
+        
+        [Fact]
+        public void CustomerWhoIsCurrentAndDueToPayAndFailsOnceIsStillSubscribed()
+        {
+            var customer = new Customer { Subscribed = true, PaidThroughYear = 2012, PaidThroughMonth = 1 };
+            var processor = TestableBillingProcessor.Create(customer);
+            processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
+                             .Returns(false);
+                
 
-        // paid through next year
+            processor.ProcessMonth(2011, 8);
+
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+        }
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
         // not all customers are subscribers
@@ -69,7 +81,7 @@
 
     public interface ICreditCardCharger
     {
-        void ChargeCustomer(Customer customer);
+        bool ChargeCustomer(Customer customer);
     }
 
     public class Customer
