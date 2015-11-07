@@ -128,6 +128,10 @@ public abstract class Subscription
     public abstract bool IsRecurring { get; }
 
     public abstract bool NeedsBilling(int year, int month);
+
+    public virtual void RecordChargedResult(bool charged)
+    {
+    }
 }
 
 public class AnnualSubscription : Subscription
@@ -150,6 +154,8 @@ public class AnnualSubscription : Subscription
 
 public class MonthlySubscription : Subscription
 {
+    private int failureCount;
+
     public override bool IsCurrent
     {
         get
@@ -168,15 +174,18 @@ public class MonthlySubscription : Subscription
         return PaidThroughYear <= year &&
                PaidThroughMonth < month;
     }
+
+    public override void RecordChargedResult(bool charged)
+    {
+        if (!charged)
+        {
+            failureCount++;
+        }
+    }
 }
 
 public class Customer
 {
-    // Is this really customer data or subscription data?
-    public int PaidThroughMonth { get; set; }
-    public int PaidThroughYear { get; set; }
-    public int PaymentFailures { get; set; }
-    public bool Subscribed { get; set; }
     public Subscription Subscription { get; set; }
 }
 
@@ -201,26 +210,22 @@ public class BillingProcessor
         if (NeedsBilling(year, month, customer))
         {
             bool charged = _charger.ChargeCustomer(customer);
+            customer.Subscription.RecordChargedResult(charged);
 
-            if (!charged)
-            {
-                if (++customer.PaymentFailures >= MAX_FAILURES)
-                {
-                    customer.Subscribed = false;
-                }
-            }
+            //if (!charged)
+            //{
+            //    if (++customer.PaymentFailures >= MAX_FAILURES)
+            //    {
+            //        customer.Subscribed = false;
+            //    }
+            //}
         }
     }
 
     private static bool NeedsBilling(int year, int month, Customer customer)
     {
-        if (customer.Subscription != null)
-        {
-            return customer.Subscription.NeedsBilling(year, month);
-        }
-        return customer.Subscribed &&
-               customer.PaidThroughYear <= year &&
-               customer.PaidThroughMonth < month;
+        return customer.Subscription != null
+            && customer.Subscription.NeedsBilling(year, month);
     }
 }
 
