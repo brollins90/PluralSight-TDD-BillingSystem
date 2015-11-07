@@ -117,6 +117,44 @@ public interface ICreditCardCharger
     bool ChargeCustomer(Customer customer);
 }
 
+public abstract class Subscription
+{
+    public abstract bool IsCurrent { get; }
+    public abstract bool IsRecurring { get; }
+}
+
+public class AnnualSubscription : Subscription
+{
+    public override bool IsCurrent
+    {
+        get
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public override bool IsRecurring
+    {
+        get { return false; }
+    }
+}
+
+public class MonthlySubscription : Subscription
+{
+    public override bool IsCurrent
+    {
+        get
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public override bool IsRecurring
+    {
+        get { return true; }
+    }
+}
+
 public class Customer
 {
     // Is this really customer data or subscription data?
