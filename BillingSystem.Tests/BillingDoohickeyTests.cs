@@ -69,17 +69,17 @@
         }
 
         [Fact]
-        public void CustomerWhoIsCurrentAndDueToPayAndFailsThreeTimesIsNoLongerSubscribed()
+        public void CustomerWhoIsCurrentAndDueToPayAndFailsMaximumTimesIsNoLongerSubscribed()
         {
-            var customer = new Customer { Subscribed = true, PaidThroughYear = 2012, PaidThroughMonth = 1 };
+            var customer = new Customer { Subscribed = true, PaidThroughYear = 2011, PaidThroughMonth = 1 };
             var processor = TestableBillingProcessor.Create(customer);
             processor.Charger.Setup(c => c.ChargeCustomer(It.IsAny<Customer>()))
                              .Returns(false);
 
-
-            processor.ProcessMonth(2011, 8);
-            processor.ProcessMonth(2011, 8);
-            processor.ProcessMonth(2011, 8);
+            for (int i = 0; i < BillingProcessor.MAX_FAILURES; i++)
+            {
+                processor.ProcessMonth(2011, 8);
+            }
 
             Assert.False(customer.Subscribed);
         }
@@ -102,13 +102,17 @@
 
     public class Customer
     {
-        public int PaidThroughMonth { get; internal set; }
-        public int PaidThroughYear { get; internal set; }
-        public bool Subscribed { get; internal set; }
+        // Is this really customer data or subscription data?
+        public int PaidThroughMonth { get; set; }
+        public int PaidThroughYear { get; set; }
+        public int PaymentFailures { get; set; }
+        public bool Subscribed { get; set; }
     }
 
     public class BillingProcessor
     {
+        public const int MAX_FAILURES = 3;
+
         private ICreditCardCharger _charger;
         private ICustomerRepository _repo;
 
@@ -127,7 +131,15 @@
                 customer.PaidThroughYear <= year &&
                 customer.PaidThroughMonth < month)
             {
-                _charger.ChargeCustomer(customer);
+                bool charged = _charger.ChargeCustomer(customer);
+
+                if (!charged)
+                {
+                    if (++customer.PaymentFailures >= MAX_FAILURES)
+                    {
+                        customer.Subscribed = false;
+                    }
+                }
             }
         }
     }
