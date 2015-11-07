@@ -12,8 +12,7 @@
         {
             var repo = new Mock<ICustomerRepository>();
             var charger = new Mock<ICreditCardCharger>();
-            var customer = new Customer();
-
+            var customer = new Customer(); // what does not having a subscription mean?
             BillingDoohickey thing = new BillingDoohickey(repo.Object, charger.Object);
 
             thing.ProcessMonth(2011, 8);
@@ -55,7 +54,7 @@
             _charger = charger;
         }
 
-        internal void ProcessMonth(int v1, int v2)
+        internal void ProcessMonth(int year, int month)
         {
             throw new NotImplementedException();
         }
