@@ -40,6 +40,12 @@
             charger.Verify(c => c.ChargeCustomer(customer), Times.Once);
         }
 
+        [Fact]
+        public void CustomerWithSubscriptionThatIsCurrentDoesNotGetCharged()
+        {
+
+        }
+
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
         // not all customers are subscribers
