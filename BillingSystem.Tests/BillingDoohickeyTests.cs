@@ -65,7 +65,7 @@
 
             processor.ProcessMonth(2011, 8);
 
-            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
+            Assert.True(customer.Subscribed);
         }
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
