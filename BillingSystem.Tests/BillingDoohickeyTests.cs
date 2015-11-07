@@ -35,13 +35,19 @@
         [Fact]
         public void CustomerWithSubscriptionThatIsCurrentDoesNotGetCharged()
         {
+            var customer = new Customer { Subscribed = true, PaidThroughYear = 2011, PaidThroughMonth = 8 };
+            var processor = TestableBillingProcessor.Create(customer);
 
+            processor.ProcessMonth(2011, 8);
+
+            processor.Charger.Verify(c => c.ChargeCustomer(customer), Times.Never);
         }
 
         // Monthly Billing
         // Grace period for missed payments ("dunning" status)
         // not all customers are subscribers
         // idle customers should be automatically unsubscribed
+        // what about customers that signed up today?
     }
 
     public interface ICustomerRepository
@@ -56,6 +62,8 @@
 
     public class Customer
     {
+        public int PaidThroughMonth { get; internal set; }
+        public int PaidThroughYear { get; internal set; }
         public bool Subscribed { get; internal set; }
     }
 
